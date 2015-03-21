@@ -37,51 +37,48 @@
   (setq dir1 (expand-file-name (or dir1 default-directory)))
   (setq dir2 (expand-file-name (or dir2 default-directory)))
 
-  (let (( file-name (expand-file-name
-                     (if (eq major-mode 'dired-mode)
-                         (progn
-                           (setq ext1 nil)
-                           (setq ext2 nil)
-                           (dired-current-directory))
-                       buffer-file-name))))
-    (when (> (length dir2) (length dir1))
-      (cl-rotatef dir1 dir2)
-      (cl-rotatef ext1 ext2))
-    (let (( filename1
-            (ignore-errors
-              (concat dir2
-                      (substring file-name
-                                 (length dir1)
-                                 (when ext1
-                                   (- -1 (length ext1))))
-                      (when ext2 ".")
-                      ext2
-                      )))
-          ( filename2
-            (ignore-errors
-              (concat dir1
-                      (substring file-name
-                                 (length dir2)
-                                 (when ext2
-                                   (- -1 (length ext2))))
-                      (when ext1 ".")
-                      ext1
-                      ))))
-      (cond ( (and filename1
-                   (string-prefix-p dir1 file-name)
-                   (or (not ext1)
-                       (string-suffix-p ext1 file-name))
-                   (or create
-                       (file-exists-p filename1))
-                   )
-              (find-file filename1))
-            ( (and filename2
-                   (string-prefix-p dir2 file-name)
-                   (or (not ext2)
-                       (string-suffix-p ext2 file-name))
-                   (or create
-                       (file-exists-p filename2)))
-              (find-file filename2))))))
+  (when (> (length dir2) (length dir1))
+    (cl-rotatef dir1 dir2)
+    (cl-rotatef ext1 ext2))
+
+  (when ext1
+    (setq ext1 (concat "." ext1)))
+  (when ext2
+    (setq ext2 (concat "." ext2)))
+
+  (let* (( file-name (expand-file-name
+                      (if (eq major-mode 'dired-mode)
+                          (progn
+                            (setq ext1 nil)
+                            (setq ext2 nil)
+                            (dired-current-directory))
+                        buffer-file-name)))
+         ( make-candidate
+           (lambda (dir1 dir2 ext1 ext2)
+             (ignore-errors
+               (concat dir2
+                       (substring file-name
+                                  (length dir1)
+                                  (when ext1
+                                    (- (length ext1))))
+                       ext2
+                       ))))
+         ( process-candidate
+           (lambda (candidate dir ext)
+             (and candidate
+                  (string-prefix-p dir file-name)
+                  (or (not ext)
+                      (string-suffix-p ext file-name))
+                  (or create
+                      (file-exists-p candidate))
+                  (find-file candidate))))
+         ( candidate1
+           (funcall make-candidate dir1 dir2 ext1 ext2))
+         ( candidate2
+           (funcall make-candidate dir2 dir1 ext2 ext1)))
+    (or (funcall process-candidate candidate1 dir1 ext1)
+        (funcall process-candidate candidate2 dir2 ext2))
+    ))
 
 (defun switch-dir-root ()
   (locate-dominating-file default-directory ".dir-locals.el"))
