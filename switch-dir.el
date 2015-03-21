@@ -33,7 +33,7 @@
 
 (defvar switch-dir-spec nil)
 
-(defun switch-dir-switch (dir1 dir2 &optional ext1 ext2 create)
+(cl-defun switch-dir-switch (dir1 dir2 &optional ext1 ext2 create)
   (setq dir1 (expand-file-name (or dir1 default-directory)))
   (setq dir2 (expand-file-name (or dir2 default-directory)))
 
@@ -46,39 +46,32 @@
   (when ext2
     (setq ext2 (concat "." ext2)))
 
-  (let* (( file-name (expand-file-name
-                      (if (eq major-mode 'dired-mode)
-                          (progn
-                            (setq ext1 nil)
-                            (setq ext2 nil)
-                            (dired-current-directory))
-                        buffer-file-name)))
-         ( make-candidate
+  (let* (( file-name
+           (expand-file-name
+            (if (eq major-mode 'dired-mode)
+                (progn
+                  (setq ext1 nil)
+                  (setq ext2 nil)
+                  (dired-current-directory))
+              buffer-file-name)))
+         ( try-switch
            (lambda (dir1 dir2 ext1 ext2)
-             (ignore-errors
-               (concat dir2
-                       (substring file-name
-                                  (length dir1)
-                                  (when ext1
-                                    (- (length ext1))))
-                       ext2
-                       ))))
-         ( process-candidate
-           (lambda (candidate dir ext)
-             (and candidate
-                  (string-prefix-p dir file-name)
-                  (or (not ext)
-                      (string-suffix-p ext file-name))
-                  (or create
-                      (file-exists-p candidate))
-                  (find-file candidate))))
-         ( candidate1
-           (funcall make-candidate dir1 dir2 ext1 ext2))
-         ( candidate2
-           (funcall make-candidate dir2 dir1 ext2 ext1)))
-    (or (funcall process-candidate candidate1 dir1 ext1)
-        (funcall process-candidate candidate2 dir2 ext2))
-    ))
+             (when (and (string-prefix-p dir1 file-name)
+                        (string-suffix-p (or ext1 "") file-name))
+               (let* (( candidate
+                        (ignore-errors
+                          (concat dir2
+                                  (substring file-name
+                                             (length dir1)
+                                             (when ext1
+                                               (- (length ext1))))
+                                  ext2
+                                  ))))
+                 (and candidate
+                      (or create (file-exists-p candidate))
+                      (find-file candidate)))))))
+    (or (funcall try-switch dir1 dir2 ext1 ext2)
+        (funcall try-switch dir2 dir1 ext2 ext1))))
 
 (defun switch-dir-root ()
   (locate-dominating-file default-directory ".dir-locals.el"))
