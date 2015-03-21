@@ -34,8 +34,8 @@
 (defvar switch-dir-spec nil)
 
 (defun switch-dir-switch (dir1 dir2 &optional ext1 ext2 create)
-  (setq dir1 (or dir1 default-directory))
-  (setq dir2 (or dir2 default-directory))
+  (setq dir1 (expand-file-name (or dir1 default-directory)))
+  (setq dir2 (expand-file-name (or dir2 default-directory)))
 
   (let (( file-name (expand-file-name
                      (if (eq major-mode 'dired-mode)
@@ -91,15 +91,12 @@
   (unless switch-dir-spec
     (cl-return-from switch-dir))
   (cl-loop with root = (switch-dir-root)
-           with buffer-ext = (file-name-extension (buffer-file-name))
-           for (src test ext) in switch-dir-spec
+           for (src test src-ext test-ext) in switch-dir-spec
            do (when (switch-dir-switch
                      (concat root src)
                      (concat root test)
-                     (when ext
-                       buffer-ext)
-                     (when ext
-                       (concat ext "." buffer-ext))
+                     src-ext
+                     test-ext
                      create)
                 (cl-return t))))
 
