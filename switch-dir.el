@@ -33,7 +33,7 @@
 
 (defvar switch-dir-spec nil)
 
-(cl-defun switch-dir-switch (dir1 dir2 &optional ext1 ext2 create)
+(defun switch-dir-switch (dir1 dir2 &optional ext1 ext2 create)
   (setq dir1 (expand-file-name (or dir1 default-directory)))
   (setq dir2 (expand-file-name (or dir2 default-directory)))
 
