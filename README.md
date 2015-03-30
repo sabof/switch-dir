@@ -1,4 +1,4 @@
-### swtich-dir
+# switch-dir
 
 Switch between 2 related files. Can be used for unit tests, or compiled files.
 
@@ -6,7 +6,7 @@ The files may be located in different directories and have different
 extensions. They may be located in sub directories, as long as the trees are the
 same. One directory may also contain the other.
 
-# Usage:
+### Usage:
 
 create a `.dir-locals.el` in your project root, and write a config
 similar to:
