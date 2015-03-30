@@ -1,7 +1,9 @@
 ;;; switch-dir.el --- Switch between 2 directories
-;;; Version: 0.1
-;;; Author: sabof
-;;; URL: https://github.com/sabof/switch-dir
+
+;; Version: 0.1
+;; Author: sabof
+;; URL: https://github.com/sabof/switch-dir
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;;; Commentary:
 
@@ -76,6 +78,7 @@
 (defun switch-dir-root ()
   (locate-dominating-file default-directory ".dir-locals.el"))
 
+;;;###autoload
 (cl-defun switch-dir (&optional create)
   (interactive "P")
   (unless switch-dir-spec
